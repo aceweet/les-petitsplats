@@ -10,44 +10,8 @@ class Recipe {
     this.time = data.time;
     this.ustensils = data.ustensils;
     this.id = data.id;
-    this.terms = new Set();
-
-    this.collectTerms();
   }
 
-  render() {
-    let ingredientHtml = "";
-
-    this.ingredients.forEach((ingr) => {
-      if (ingr.quantity) {
-        if (ingr.unit && ingr.quantity) {
-          ingredientHtml += `<div><span class="ingredient" data-id="${ingr.ingredient}">${ingr.ingredient}<span> : ${ingr.quantity} ${ingr.unit}</div>`;
-        } else {
-          ingredientHtml += `<div><span class="ingredient" data-id="${ingr.ingredient}">${ingr.ingredient}<span> : ${ingr.quantity}</div>`;
-        }
-      } else {
-        ingredientHtml += `<div><span class="ingredient" data-id="${ingr.ingredient}">${ingr.ingredient}<span></div>`;
-      }
-    });
-
-    return `
-       <article class="article" id=${this.id} tabindex="0">
-      
-         <div class="photo"><img src="images/${this.id}.jpg"/></div>
-         <div class="article-all">
-            <div class="title">
-                 <div class="title-txt">${this.name}</div>
-                <div class="title-time"><i class="far fa-clock"></i> ${this.time}</div>
-            </div>
-             <div class="details">
-                <div class="details-ing">${ingredientHtml}</div>
-                <div class="details-txt">${this.description}</div>
-            </div>
-         </div>
-       </article>`;
-  }
-
-  //pour filtres sur tags
   hasIngredient(ingredient) {
     let exists = false;
     this.ingredients.forEach((ing) => {
@@ -77,50 +41,76 @@ class Recipe {
     return exists;
   }
 
-  //regroupe dans un set tous les termes utiles d'une recette en vue de la recherche barre principale
-  collectTerms() {
-    let recipe = this;
+  render() {
+    let ingredientHtml = "";
 
-    let nameToConcatArray = [normalise(recipe.name)];
-    let ingredientsToConcatArray = getIngredientsToConcat(recipe);
-    let applianceToConcat = [normalise(recipe.appliance)];
-    let ustensilsToConcatArray = getUstensilsToConcat(recipe);
-    let descriptionToConcat = recipe.description;
-    let descriptionNorm = normalise(descriptionToConcat);
-    let descriptionToConcatArray = descriptionNorm.split(" ");
-    let descriptionToBeConcatArray = descriptionToConcatArray.filter((elt) => {
-      if (stopWords.includes(elt)) {
-        return false;
+    this.ingredients.forEach((ingr) => {
+      if (ingr.quantity) {
+        if (ingr.unit && ingr.quantity) {
+          ingredientHtml += `<div><span class="ingredient" data-id="${ingr.ingredient}">${ingr.ingredient}<span> : ${ingr.quantity} ${ingr.unit}</div>`;
+        } else {
+          ingredientHtml += `<div><span class="ingredient" data-id="${ingr.ingredient}">${ingr.ingredient}<span> : ${ingr.quantity}</div>`;
+        }
+      } else {
+        ingredientHtml += `<div><span class="ingredient" data-id="${ingr.ingredient}">${ingr.ingredient}<span></div>`;
       }
-      return true;
     });
 
-    let recipeAllTermsArray = descriptionToBeConcatArray.concat(
-      nameToConcatArray,
-      applianceToConcat,
-      ingredientsToConcatArray,
-      ustensilsToConcatArray
-    );
-
-    this.terms = new Set(
-      recipeAllTermsArray.filter((elt) => {
-        if (elt.length <= 2) {
-          return false;
-        }
-        return true;
-      })
-    );
-    this.terms = sortSet(this.terms);
-    //console.log("TOUS LES MOTS DE:", recipe.id, recipe.name, this.terms);
+    return `
+       <article id=${this.id}>
+         <div class="photo"><img src="images/${this.id}.jpg"/></div>
+         <div class="article-all">
+            <div class="title">
+                 <div class="title-txt">${this.name}</div>
+                <div class="title-time"><i class="far fa-clock"></i> ${this.time}</div>
+            </div>
+             <div class="details">
+                <div class="details-ing">${ingredientHtml}</div>
+                <div class="details-txt">${this.description}</div>
+            </div>
+         </div>
+       </article>`;
   }
-  //recherche principale pour algo 1
-  hasTerm(str) {
+
+  //POUR ALGO 2
+  hasInIng(str) {
     let exists = false;
-    this.terms.forEach((term) => {
-      if (term.includes(str)) {
+    this.ingredients.forEach((ing) => {
+      if (normalise(ing.ingredient).includes(str)) {
         exists = true;
       }
     });
+    return exists;
+  }
+  hasInApp(str) {
+    let exists = false;
+
+    if (normalise(this.appliance).includes(str)) {
+      exists = true;
+    }
+    return exists;
+  }
+  hasInUst(str) {
+    let exists = false;
+    this.ustensils.forEach((ust) => {
+      if (normalise(ust).includes(str)) {
+        exists = true;
+      }
+    });
+    return exists;
+  }
+  hasInTitle(str) {
+    let exists = false;
+    if (normalise(this.name).includes(str)) {
+      exists = true;
+    }
+    return exists;
+  }
+  hasInDescription(str) {
+    let exists = false;
+    if (normalise(this.description).includes(str)) {
+      exists = true;
+    }
     return exists;
   }
 }

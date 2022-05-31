@@ -85,7 +85,6 @@ class List {
         this.listenForFilteringIng();
         this.listenForFilteringAppl();
         this.listenForFilteringUst();
-        this.listenForFilteringAll();
 
         this.disableAllSelectedTag();
 
@@ -93,6 +92,7 @@ class List {
 
         closeAll();
         document.getElementById("search-drop_ing").value = "";
+        document.getElementById("search-all").value = "";
       });
     });
   }
@@ -189,13 +189,13 @@ class List {
         this.listenForFilteringAppl();
         this.listenForFilteringIng();
         this.listenForFilteringUst();
-        this.listenForFilteringAll();
 
         this.disableAllSelectedTag();
         this.closeTags();
 
         closeAll();
         document.getElementById("search-drop_app").value = "";
+        document.getElementById("search-all").value = "";
       });
     });
   }
@@ -291,13 +291,13 @@ class List {
         this.listenForFilteringUst();
         this.listenForFilteringIng();
         this.listenForFilteringAppl();
-        this.listenForFilteringAll();
 
         this.disableAllSelectedTag();
         this.closeTags();
 
         closeAll();
         document.getElementById("search-drop_ust").value = "";
+        document.getElementById("search-all").value = "";
       });
     });
   }
@@ -397,9 +397,6 @@ class List {
         this.filterByIng();
         this.filterByUst();
         this.filterByAppl();
-
-        this.filterByAll(this.filtered);
-
         this.appliancesAvailable = this.listAvailableAppliances();
         this.appliancesAvailable = sortSet(this.appliancesAvailable);
         this.displayAppliances(this.appliancesAvailable);
@@ -444,14 +441,6 @@ class List {
       let hasNewCharacters = !!(this.search.length <= e.target.value.length);
       this.search = normalise(e.target.value);
       let items = this.all;
-      this.filterByIng();
-      this.filterByUst();
-      this.filterByAppl();
-
-      this.listenForFilteringIng();
-      this.listenForFilteringUst();
-      this.listenForFilteringAppl();
-
       if (hasNewCharacters) {
         items = this.filtered;
       }
@@ -459,10 +448,6 @@ class List {
       if (this.search.length > 2) {
         this.filterByAll(items);
         this.displayRecipes();
-
-        this.filterByIng();
-        this.filterByUst();
-        this.filterByAppl();
 
         this.ustensilsAvailable = this.listAvailableUstensils();
         this.ustensilsAvailable = sortSet(this.ustensilsAvailable);
@@ -482,15 +467,10 @@ class List {
         if (this.filtered.length == 0) {
           document.getElementById("filtered-empty").style.display = "block";
         } else {
-          this.disableAllSelectedTag();
           document.getElementById("filtered-empty").style.display = "none";
         }
       } else {
         this.filtered = this.all;
-        this.filterByIng();
-        this.filterByUst();
-        this.filterByAppl();
-
         document.getElementById("filtered-empty").style.display = "none";
 
         this.ustensilsAvailable = this.listAvailableUstensils();
@@ -504,27 +484,25 @@ class List {
         this.appliancesAvailable = this.listAvailableAppliances();
         this.appliancesAvailable = sortSet(this.appliancesAvailable);
         this.displayAppliances(this.appliancesAvailable);
-
-        this.disableAllSelectedTag();
-        this.listenForFilteringAppl();
-        this.listenForFilteringIng();
-        this.listenForFilteringUst();
-
         this.displayRecipes();
       }
     });
-    this.closeTags();
   }
   filterByAll(items) {
     let t0 = performance.now();
 
     this.filtered = items.filter((recipe) => {
-      return !!recipe.hasTerm(this.search);
+      return (
+        !!recipe.hasInIng(this.search) ||
+        !!recipe.hasInApp(this.search) ||
+        !!recipe.hasInUst(this.search) ||
+        !!recipe.hasInTitle(this.search) ||
+        !!recipe.hasInDescription(this.search)
+      );
     });
-
     let t1 = performance.now();
     console.log(
-      'time to filter with ALGO 1"' + this.search + '":' + (t1 - t0) + "ms"
+      'time to filter with ALGO 2"' + this.search + '":' + (t1 - t0) + "ms"
     );
   }
 
